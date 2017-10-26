@@ -66,6 +66,7 @@ public class TodayStepService extends Service implements Handler.Callback {
     private TodayStepDBHelper mTodayStepDBHelper;
 
     private final Handler sHandler = new Handler(this);
+    private String mLastDate;
 
     @Override
     public boolean handleMessage(Message msg) {
@@ -144,17 +145,17 @@ public class TodayStepService extends Service implements Handler.Callback {
         }
         builder.setContentIntent(contentIntent);
         int smallIcon = getResources().getIdentifier("icon_step_small", "mipmap", getPackageName());
-        if(0 != smallIcon){
-            Logger.e(TAG,"smallIcon");
+        if (0 != smallIcon) {
+            Logger.e(TAG, "smallIcon");
             builder.setSmallIcon(smallIcon);
-        }else {
+        } else {
             builder.setSmallIcon(R.mipmap.ic_notification_default);// 设置通知小ICON
         }
         int largeIcon = getResources().getIdentifier("icon_step_large", "mipmap", getPackageName());
-        if(0 != largeIcon) {
-            Logger.e(TAG,"largeIcon");
+        if (0 != largeIcon) {
+            Logger.e(TAG, "largeIcon");
             builder.setLargeIcon(BitmapFactory.decodeResource(getResources(), largeIcon));
-        }else{
+        } else {
             builder.setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_notification_default));
 
         }
@@ -274,7 +275,14 @@ public class TodayStepService extends Service implements Handler.Callback {
      * @param currentStep
      */
     private void saveDb(boolean handler, int currentStep) {
-
+        String todayDate = getTodayDate();
+        if (!TextUtils.equals(mLastDate, todayDate)) {
+            CURRENT_SETP = 0;
+            updateNotification(CURRENT_SETP);
+            cleanDb();
+            mLastDate = getTodayDate();
+            return;
+        }
         TodayStepData todayStepData = new TodayStepData();
         todayStepData.setToday(getTodayDate());
         todayStepData.setDate(System.currentTimeMillis());
