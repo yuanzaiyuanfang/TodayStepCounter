@@ -49,6 +49,7 @@ public class TodayStepService extends Service implements Handler.Callback {
     public static final String INTENT_JOB_SCHEDULER = "intent_job_scheduler";
 
     public static int CURRENT_SETP = 0;
+    public static int DAY_SETP = 0;
 
     private SensorManager sensorManager;
     private TodayStepDcretor stepDetector;
@@ -253,6 +254,9 @@ public class TodayStepService extends Service implements Handler.Callback {
      */
     private void updateTodayStep(int currentStep) {
         CURRENT_SETP = currentStep;
+        if (DAY_SETP < currentStep) {
+            DAY_SETP = currentStep;
+        }
         updateNotification(CURRENT_SETP);
         saveStep(currentStep);
     }
@@ -276,13 +280,16 @@ public class TodayStepService extends Service implements Handler.Callback {
      */
     private void saveDb(boolean handler, int currentStep) {
         String todayDate = getTodayDate();
-        if (!TextUtils.equals(mLastDate, todayDate)) {
+        if (!TextUtils.isEmpty(mLastDate) && !TextUtils.equals(mLastDate, todayDate)) {
+            saveTodayAllDb(new AllStepData(mLastDate + "", DAY_SETP + ""));
+            DAY_SETP = 0;
+            cleanDb();
             CURRENT_SETP = 0;
             updateNotification(CURRENT_SETP);
-            cleanDb();
             mLastDate = getTodayDate();
             return;
         }
+        mLastDate = getTodayDate();
         TodayStepData todayStepData = new TodayStepData();
         todayStepData.setToday(getTodayDate());
         todayStepData.setDate(System.currentTimeMillis());
@@ -293,6 +300,18 @@ public class TodayStepService extends Service implements Handler.Callback {
                 Logger.e(TAG, "saveDb currentStep : " + currentStep);
                 mTodayStepDBHelper.insert(todayStepData);
             }
+        }
+    }
+
+    /**
+     * 插入今日总步数 统计表
+     *
+     * @param allStepData
+     */
+    private void saveTodayAllDb(AllStepData allStepData) {
+        if (null != mTodayStepDBHelper) {
+            Logger.w(TAG, "saveTodayAllDb : " + allStepData.toString());
+            mTodayStepDBHelper.insertTodayAll(allStepData);
         }
     }
 
@@ -368,7 +387,7 @@ public class TodayStepService extends Service implements Handler.Callback {
         @Override
         public String getTodaySportStepArray() throws RemoteException {
             if (null != mTodayStepDBHelper) {
-                List<TodayStepData> todayStepDataArrayList = mTodayStepDBHelper.getQueryAll();
+                List<TodayStepData> todayStepDataArrayList = mTodayStepDBHelper.getQueryTodayAll();
                 if (null == todayStepDataArrayList || 0 == todayStepDataArrayList.size()) {
                     return null;
                 }
@@ -392,6 +411,21 @@ public class TodayStepService extends Service implements Handler.Callback {
             }
             return null;
         }
+
+        @Override
+        public String getAllSportStepArray() throws RemoteException {
+            if (null != mTodayStepDBHelper) {
+                List<AllStepData> allStepDataArrayList = mTodayStepDBHelper.getQueryAll();
+                if (null == allStepDataArrayList || 0 == allStepDataArrayList.size()) {
+                    return null;
+                }
+                Logger.w(TAG, "getAllSportStepArray : " + allStepDataArrayList.toString());
+                return allStepDataArrayList.toString();
+            }
+            return null;
+        }
+
+
     };
 
     // 公里计算公式

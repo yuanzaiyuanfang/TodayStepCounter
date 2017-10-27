@@ -10,6 +10,7 @@ import android.os.Message;
 import android.os.RemoteException;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -107,12 +108,28 @@ public class MainActivity extends AppCompatActivity {
 
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.stepArrayButton: {
+            case R.id.todayArrayButton: {
                 //显示当天计步数据详细，步数对应当前时间
                 if (null != iSportStepInterface) {
                     try {
                         String stepArray = iSportStepInterface.getTodaySportStepArray();
                         mStepArrayTextView.setText(stepArray);
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
+                }
+                break;
+            }
+            case R.id.allArrayButton: {
+                //显示历史计步数据详细，步数对应日期
+                if (null != iSportStepInterface) {
+                    try {
+                        String stepArray = iSportStepInterface.getAllSportStepArray();
+                        if (TextUtils.isEmpty(stepArray)) {
+                            mStepArrayTextView.setText("空");
+                        } else {
+                            mStepArrayTextView.setText(stepArray);
+                        }
                     } catch (RemoteException e) {
                         e.printStackTrace();
                     }
